@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>qrs en q5</title>
+	<script src="https://q5js.org/q5.js"></script>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+			text-align: center;
+			font-family: sans-serif;
+		}
+		body {
+			width: 100dvw;
+			height: 100dvh;
+		}
+		main {
+			width: 100%;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			position: relative;
+		}
+		#contenedorQ5 {
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			z-index: 1;
+		}
+		#contenedorInput {
+			width: 100%;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			position: absolute;
+			z-index: 2;
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<div id="contenedorQ5"></div>
+		<div id="contenedorInput">
+			<input type="text" id="inputText">
+			<button type="button" id="inputBtn">GENERAR QR</button>
+		</div>
+	</main>
+	<div id="hiddenQR" style="display: none"></div>
+	<script type="module">
+
+  import QRCodeStyling from "https://cdn.skypack.dev/pin/qr-code-styling@v1.9.2-ky0NCVWkCWGuVcbxT4Lf/mode=imports,min/optimized/qr-code-styling.js";
+
+	// ajustes
+	const config = {
+		"type": "canvas",
+		"shape": "square",
+		"width": 300,
+		"height": 300,
+		"data": "Lorem ipsum dolor, sit amet consectetur adipisicing elit.",
+		"margin": 0,
+		"qrOptions": {
+			"typeNumber": "0",
+			"mode": "Byte",
+			"errorCorrectionLevel": "Q"
+		},
+		"imageOptions": {
+			"saveAsBlob": true,
+			"hideBackgroundDots": true,
+			"imageSize": 0.4,
+			"margin": 0
+		},
+		"dotsOptions": {
+			"type": "square",
+			"color": "#000000",
+			"roundSize": true
+		},
+		"backgroundOptions": {
+			"round": 0,
+			"color": "#ffffff"
+		},
+		"image": null,
+		"dotsOptionsHelper": {
+			"colorType": {
+				"single": true,
+				"gradient": false
+			},
+			"gradient": {
+				"linear": true,
+				"radial": false,
+				"color1": "#6a1a4c",
+				"color2": "#6a1a4c",
+				"rotation": "0"
+			}
+		},
+		"cornersSquareOptions": {
+			"type": "square",
+			"color": "#000000",
+			"gradient": null
+		},
+		"cornersSquareOptionsHelper": {
+			"colorType": {
+				"single": true,
+				"gradient": false
+			},
+			"gradient": {
+				"linear": true,
+				"radial": false,
+				"color1": "#000000",
+				"color2": "#000000",
+				"rotation": "0"
+			}
+		},
+		"cornersDotOptions": {
+			"type": "",
+			"color": "#000000"
+		},
+		"cornersDotOptionsHelper": {
+			"colorType": {
+				"single": true,
+				"gradient": false
+			},
+			"gradient": {
+				"linear": true,
+				"radial": false,
+				"color1": "#000000",
+				"color2": "#000000",
+				"rotation": "0"
+			}
+		},
+		"backgroundOptionsHelper": {
+			"colorType": {
+				"single": true,
+				"gradient": false
+			},
+			"gradient": {
+				"linear": true,
+				"radial": false,
+				"color1": "#ffffff",
+				"color2": "#ffffff",
+				"rotation": "0"
+			}
+		}
+	}
+
+	const contenedor = document.querySelector("#contenedorQ5");
+	new Q5("global", contenedor);
+
+  let qrImg;
+	document.querySelector("#inputBtn").addEventListener("click", () => {
+		
+		// actualiza ajuste
+		config.data = document.querySelector("#inputText").value || "lorem ipsum";
+
+		// oculta contenedor input
+		document.querySelector("#contenedorInput").style.display = "none";
+
+		// crea el qr segun ajustes
+		const qr = new QRCodeStyling(config);
+	
+		// genera un canvas en un div oculto
+		qr.append(document.getElementById("hiddenQR"));
+		
+		// exporta imagen png a blob
+		qr.getRawData("png").then(blob => {
+			const url = URL.createObjectURL(blob);
+			loadImage(url, img => { qrImg = img }); // y carga blob en q5
+		});
+	})
+
+	const RESOLU = 400;
+  window.setup = () => {
+    createCanvas(...getSize());
+		displayMode(MAXED);
+  }
+
+  window.draw = () => {
+		const mod255 = frameCount % 255;
+    background(mod255, 100, 400 - mod255);
+    if (qrImg) image(qrImg, halfWidth - 150, halfHeight - 150, 300, 300);
+  }
+
+	window.addEventListener("resize", () => {
+		resizeCanvas(...getSize());
+	});
+
+	function getSize() {
+		const vw = window.visualViewport?.width ?? window.innerWidth;
+		const vh = window.visualViewport?.height ?? window.innerHeight;
+		const prp = vw / vh;
+		const isVert = prp < 1;
+		const maxSize = isVert
+			? RESOLU * vh / vw
+			: RESOLU * prp;
+		return isVert
+			? [RESOLU, maxSize]
+			: [maxSize, RESOLU];
+	}
+
+	</script>
+</body>
+</html>
