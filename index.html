@@ -16,6 +16,8 @@
 		body {
 			width: 100dvw;
 			height: 100dvh;
+			cursor: move;
+			background-color: rgb(78, 184, 233);
 		}
 		main {
 			width: 100%;
@@ -31,6 +33,9 @@
 			position: absolute;
 			z-index: 1;
 		}
+		#contenedorQ5 video {
+			display: none !important;
+		}
 		#contenedorInput {
 			width: 100%;
 			height: 100%;
@@ -41,12 +46,26 @@
 			z-index: 2;
 		}
 	</style>
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
+	<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'>
+		<style> .cs { stroke: rgb(0, 0, 0); stroke-width: 1; } </style>
+		<style> .bl { fill: rgb(255, 255, 255); } </style>
+		<style> .ng { fill: rgb(0, 0, 0); } </style>
+		<circle cx='30' cy='30' r='30' class='cs ng'/>
+		<circle cx='30' cy='30' r='10' class='cs bl'/>
+		<circle cx='10' cy='30' r='10' class='cs bl'/>
+		<circle cx='50' cy='30' r='10' class='cs bl'/>
+		<circle cx='40' cy='12.67' r='10' class='cs bl'/>
+		<circle cx='20' cy='12.67' r='10' class='cs bl'/>
+		<circle cx='40' cy='47.32' r='10' class='cs bl'/>
+		<circle cx='20' cy='47.32' r='10' class='cs bl'/> 
+	</svg>"/>
 </head>
 <body>
 	<main>
 		<div id="contenedorQ5"></div>
 		<div id="contenedorInput">
-			<input type="text" id="inputText">
+			<input type="text" id="inputText" placeholder="Escribe el link">
 			<button type="button" id="inputBtn">GENERAR QR</button>
 		</div>
 	</main>
@@ -150,7 +169,8 @@
 	const contenedor = document.querySelector("#contenedorQ5");
 	new Q5("global", contenedor);
 
-  let qrImg;
+  let qrImg, shrek;
+
 	document.querySelector("#inputBtn").addEventListener("click", () => {
 		
 		// actualiza ajuste
@@ -168,38 +188,51 @@
 		// exporta imagen png a blob
 		qr.getRawData("png").then(blob => {
 			const url = URL.createObjectURL(blob);
-			loadImage(url, img => { qrImg = img }); // y carga blob en q5
+			loadImage(url, img => qrImg = img); // y carga blob en q5
 		});
 	})
 
 	const RESOLU = 400;
+
+	window.preload = () => {
+		shrek = createVideo("shrek.mp4");
+		shrek.muted = true;
+		shrek.loop = true;
+		shrek.play();
+	}
+
   window.setup = () => {
-    createCanvas(...getSize());
+    createCanvas(10, 10);
+		pixelDensity(1);
+		handleResize();
 		displayMode(MAXED);
+		mouseX = Infinity;
   }
 
   window.draw = () => {
 		const mod255 = frameCount % 255;
-    background(mod255, 100, 400 - mod255);
+    background(mod255, 100, 400 - mod255, 10);
     if (qrImg) image(qrImg, halfWidth - 150, halfHeight - 150, 300, 300);
+		if (shrek) image(shrek, mouseX, mouseY, 120, 100);
   }
 
-	window.addEventListener("resize", () => {
-		resizeCanvas(...getSize());
-	});
+	function handleResize() {
+		requestAnimationFrame(() => {
+			const vw = window.visualViewport?.width ?? window.innerWidth;
+			const vh = window.visualViewport?.height ?? window.innerHeight;
+			const prp = vw / vh;
+			const isVert = prp < 1;
+			const maxSize = isVert
+				? RESOLU * vh / vw
+				: RESOLU * prp;
 
-	function getSize() {
-		const vw = window.visualViewport?.width ?? window.innerWidth;
-		const vh = window.visualViewport?.height ?? window.innerHeight;
-		const prp = vw / vh;
-		const isVert = prp < 1;
-		const maxSize = isVert
-			? RESOLU * vh / vw
-			: RESOLU * prp;
-		return isVert
-			? [RESOLU, maxSize]
-			: [maxSize, RESOLU];
+			isVert
+				? resizeCanvas(RESOLU, maxSize)
+				: resizeCanvas(maxSize, RESOLU);
+		});
 	}
+
+	window.addEventListener("resize", handleResize);
 
 	</script>
 </body>
