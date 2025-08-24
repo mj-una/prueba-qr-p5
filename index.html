@@ -3,8 +3,8 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>qrs en q5</title>
-	<script src="https://q5js.org/q5.js"></script>
+	<title>𝓣𝓾 𝓟𝓻𝓸𝓹𝓲𝓸 𝓠𝓡</title>
+	<script src="https://q5js.org/q5.min.js"></script>
 	<style>
 		* {
 			margin: 0;
@@ -24,17 +24,19 @@
 			height: 100%;
 			display: flex;
 			justify-content: center;
-			align-items: center;
 			position: relative;
 		}
 		#contenedorQ5 {
 			width: 100%;
 			height: 100%;
 			position: absolute;
+			top: 0;
 			z-index: 2;
 		}
 		#contenedorQ5 canvas {
 			touch-action: none;
+			position: absolute;
+			top: 0;
 		}
 		#contenedorQ5 video {
 			display: none !important;
@@ -50,7 +52,28 @@
 			pointer-events: none;
 		}
 		#contenedorInput input, #contenedorInput button {
-			pointer-events: auto
+			margin: 0.1rem;
+			padding: 1rem;
+			pointer-events: auto;
+			box-shadow: 0 0 10px 6px rgba(255, 255, 255, 0.182);
+		}
+		#contenedorInput input {
+			background-color: rgb(255, 255, 255);
+			cursor: cell;
+		}
+		#contenedorInput button {
+			background-color: rgb(176, 176, 176);
+			cursor: pointer;
+		}
+		#contenedorInput div {
+			text-shadow: 0 0 6px rgba(255, 255, 255, 0.95);
+			position: absolute;
+			bottom: 1rem;
+			pointer-events: auto;
+			cursor: help;
+		}
+		#contenedorInput div a {
+			cursor: pointer;
 		}
 	</style>
 	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
@@ -73,7 +96,11 @@
 		<div id="contenedorQ5"></div>
 		<div id="contenedorInput">
 			<input type="text" id="inputText" placeholder="Ingresa un link">
-			<button type="button" id="inputBtn">GENERAR QR</button>
+			<button type="button" id="inputBtn">GENERAR</button>
+			<div>
+				𝓹𝓸𝓻 𝓗𝓪𝓬𝓱𝓮 𝓣𝓮𝓶𝓮𝓵𝓮<br>
+				una interfaz amigable de: <a href="https://qr-code-styling.com/" target="_blank">qr-code-styling.com/</a>
+			</div>
 		</div>
 	</main>
 	<div id="hiddenQR" style="display: none"></div>
@@ -85,8 +112,8 @@
 	const config = {
 		"type": "canvas",
 		"shape": "square",
-		"width": 300,
-		"height": 300,
+		"width": 540,
+		"height": 540,
 		"data": "Lorem ipsum dolor, sit amet consectetur adipisicing elit.",
 		"margin": 0,
 		"qrOptions": {
@@ -191,17 +218,33 @@
 		// crea el qr segun ajustes
 		const qr = new QRCodeStyling(config);
 	
-		// genera un canvas en un div oculto
-		qr.append(document.getElementById("hiddenQR"));
+		// limpia div oculto
+		const hidden = document.getElementById("hiddenQR");
+		hidden.innerHTML = "";
+		
+		// genera un canvas en el div oculto
+		qr.append(hidden);
 		
 		// exporta imagen png a blob
 		qr.getRawData("png").then(blob => {
+			assets.qrBlob = blob; // guarda blob en memoria
 			const url = URL.createObjectURL(blob);
-			loadImage(url, img => assets.qrImg = img); // y carga blob en q5
+			loadImage(url, img => assets.qrImg = img); // carga imagen en q5
+			setTimeout(() => URL.revokeObjectURL(url), 2000); // y libera url
+		}).catch(err => {
+			console.warn("Error generando blob del QR:", err);
 		});
 	})
 
 	const RESOLU = 400;
+
+  window.preload = () => {
+		assets.wordart = loadImage("wordart.png", img => img.resize(800, 220));
+		assets.stars = createVideo("stars.webm");
+		assets.stars.muted = true;
+		assets.stars.loop = true;
+		assets.stars.play();
+	}
 
   window.setup = () => {
     createCanvas(10, 10);
@@ -211,9 +254,7 @@
 		mouseX = Infinity;
 		background(255);
 		noStroke();
-		fill(200, 1);
 		textFont("serif");
-		textAlign(CENTER);
 		textSize(15);
 
 		assets.piolin = loadImage("piolin.png", img => img.resize(100, 120));
@@ -244,14 +285,37 @@
 		const mod255 = frameCount % 255;
     background(mod255, 100, 400 - mod255, 10);
 
-		// resplandor circular
+		// portada
 		if (flagIntro) {
-			for (let i = 10; i > 0; i--) {
-				circle(halfWidth, halfHeight, i * mod255);
+
+			// estrellas
+			pushMatrix();
+			translate(width, height);
+			rotate(PI);
+			for (let i = 0; i < width + 250; i += 250) {
+				image(assets.stars, i, 0, 250, max(height * 0.6, 400));
 			}
+			popMatrix();
+
+			// titulo
+			image(assets.wordart, halfWidth - 200, height - max(height * 0.7, 370));
+
+			// resplandor circular
+			if (mouseIsPressed) {
+				toque.mod = (toque.iniT + dist(toque.iniX, toque.iniY, mouseX, mouseY)) % 255;
+			}
+			push();
+			fill(200, 1);
+			shadow(200, 20);
+			shadowBox(0, 0, 15);
+			for (let i = 6; i > 0; i--) {
+				circle(halfWidth, halfHeight, i * (mouseIsPressed ? toque.mod : mod255));
+			}
+			pop();
 			return;
 		}
 
+		textAlign(CENTER);
 		const { qrImg, shrek, eva, piolin } = assets;
 
 		// particulas
@@ -269,26 +333,30 @@
 
 		// resplandor rectangular
 		push();
+		fill(200, 1);
 		shadow(200, 255, 210);
 		shadowBox(0, 0, mod255);
 		stroke(255);
+    rect(halfWidth - 151, halfHeight - 151, 302, 302);
+		shadowBox(0, 0, (frameCount + 127) % 255);
     rect(halfWidth - 151, halfHeight - 151, 302, 302);
 		pop();
     if (qrImg) image(qrImg, halfWidth - 150, halfHeight - 150, 300, 300);
 
 		// aviso listo
+		const sx = mouseX - 55;
 		push();
 		fill(140, 170, 150);
 		stroke(30, 255, 100);
 		shadow(30, 255, 100, 30);
 		shadowBox(0, 0, 6);
-		rect(mouseX, mouseY, 120, 100);
-		if (shrek) image(shrek, mouseX, mouseY, 120, 100);
+		rect(sx, mouseY, 120, 100);
+		if (shrek) image(shrek, sx, mouseY, 120, 100);
 		fill(30, 255, 100);
 		shadow(255);
 		shadowBox(0, 0, 5);
 		textSize(30);
-		text("Listo!!!", mouseX + 64, mouseY + 86);
+		text("Listo!!!", sx + 64, mouseY + 86);
 		pop();
 
 		// boton volver
@@ -311,17 +379,24 @@
 		rect(ex, ey, 100, 100);
 		pop();
 		if (eCol) {
+			rect(sx, mouseY, 120, 100);
 			textSize(36);
 			textFont("sans-serif")
-			rect(mouseX, mouseY, 120, 100);
-			text("otro\nqr??", mouseX + 54, mouseY + 40);
+			text("otro\nqr??", sx + 54, mouseY + 40);
+			fill(255, 50);
+			stroke(255, 50);
+			shadow(255);
+			shadowBox(0, 0, random(10, 30));
+			for (let i = 0; i < 10; i++) {
+				circle(mouseX, mouseY, random(4, 12));
+			}
 			cursor(HAND);
 		}
 		pop();
 
 		// boton descargar
-		const px = width * 0.96 - piolin.width;
-		const py = height * 0.96 - piolin.height;
+		const px = width * 0.96 - piolin?.width ?? 100;
+		const py = height * 0.96 - piolin?.height ?? 120;
 		push();
 		fill(200, 180, 240);
 		rect(px, py, 100, 120);
@@ -344,24 +419,24 @@
 			textFont("sans-serif");
 			cursor(HAND);
 			text("qr.png", px + 50, py + 110);
-			if (assets.flecha) image(assets.flecha, px + 22, py + 36, 50, 50);
+			if (assets.flecha) image(assets.flecha, px + 18, py + 30, 60, 60);
 			if (assets.chispa) image(assets.chispa, mouseX - 50, mouseY - 70, 100, 120);
 			pop();
 		}
 		pop();
-
-		if (
-			mouseX > width * 0.96 - piolin.width &&
-			mouseX < width * 0.96 - piolin.width + 100 &&
-			mouseY > height * 0.96 - piolin.height &&
-			mouseY < height * 0.96 - piolin.height + 120
-		) console.log(111);
   }
 
+	let toque = {};
 	let flagV = false;
 	let flagD = false;
 	window.mousePressed = () => {
-		if (flagIntro) return;
+		if (flagIntro) {
+			toque.iniT = frameCount % 255;
+			toque.iniX = mouseX;
+			toque.iniY = mouseY;
+			return;
+		}
+
 		const { piolin = {} } = assets;
 
 		if (
@@ -381,6 +456,7 @@
 
 	window.mouseReleased = () => {
 		if (flagIntro) {
+			toque = {};
 			flagV = false;
 			flagD = false;
 			return;
@@ -409,8 +485,25 @@
 			mouseY > height * 0.96 - piolin.height &&
 			mouseY < height * 0.96 - piolin.height + 120
 		) {
-			console.log(1234567899)
+			flagD = false;
+			if (assets.qrBlob) downloadBlob(assets.qrBlob);
+			console.warn("Error descargando blob del QR");
 		}
+	}
+
+	function downloadBlob(blob) {
+		if (!blob) {
+			console.warn("Error interno. bla bla");
+			return;
+	}
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = "qr.png";
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+		setTimeout(() => URL.revokeObjectURL(url), 1500);
 	}
 
 	function handleResize() {
