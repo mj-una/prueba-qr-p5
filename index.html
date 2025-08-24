@@ -14,10 +14,10 @@
 			font-family: sans-serif;
 		}
 		body {
-			width: 100dvw;
-			height: 100dvh;
+			width: 100svw;
+			height: 100svh;
 			cursor: move;
-			background-color: rgb(78, 184, 233);
+			background-color: rgb(90, 91, 96);
 		}
 		main {
 			width: 100%;
@@ -31,7 +31,10 @@
 			width: 100%;
 			height: 100%;
 			position: absolute;
-			z-index: 1;
+			z-index: 2;
+		}
+		#contenedorQ5 canvas {
+			touch-action: none;
 		}
 		#contenedorQ5 video {
 			display: none !important;
@@ -43,7 +46,11 @@
 			justify-content: center;
 			align-items: center;
 			position: absolute;
-			z-index: 2;
+			z-index: 3;
+			pointer-events: none;
+		}
+		#contenedorInput input, #contenedorInput button {
+			pointer-events: auto
 		}
 	</style>
 	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
@@ -65,7 +72,7 @@
 	<main>
 		<div id="contenedorQ5"></div>
 		<div id="contenedorInput">
-			<input type="text" id="inputText" placeholder="Escribe el link">
+			<input type="text" id="inputText" placeholder="Ingresa un link">
 			<button type="button" id="inputBtn">GENERAR QR</button>
 		</div>
 	</main>
@@ -169,9 +176,11 @@
 	const contenedor = document.querySelector("#contenedorQ5");
 	new Q5("global", contenedor);
 
-  let qrImg, shrek;
+  const assets = {};
+	let flagIntro = true;
 
 	document.querySelector("#inputBtn").addEventListener("click", () => {
+		if (flagIntro) flagIntro = false;
 		
 		// actualiza ajuste
 		config.data = document.querySelector("#inputText").value || "lorem ipsum";
@@ -188,18 +197,11 @@
 		// exporta imagen png a blob
 		qr.getRawData("png").then(blob => {
 			const url = URL.createObjectURL(blob);
-			loadImage(url, img => qrImg = img); // y carga blob en q5
+			loadImage(url, img => assets.qrImg = img); // y carga blob en q5
 		});
 	})
 
 	const RESOLU = 400;
-
-	window.preload = () => {
-		shrek = createVideo("shrek.mp4");
-		shrek.muted = true;
-		shrek.loop = true;
-		shrek.play();
-	}
 
   window.setup = () => {
     createCanvas(10, 10);
@@ -207,14 +209,209 @@
 		handleResize();
 		displayMode(MAXED);
 		mouseX = Infinity;
+		background(255);
+		noStroke();
+		fill(200, 1);
+		textFont("serif");
+		textAlign(CENTER);
+		textSize(15);
+
+		assets.piolin = loadImage("piolin.png", img => img.resize(100, 120));
+
+		assets.shrek = createVideo("shrek.mp4");
+		assets.shrek.muted = true;
+		assets.shrek.loop = true;
+		assets.shrek.play();
+
+		assets.eva = createVideo("evangelion.mp4");
+		assets.eva.muted = true;
+		assets.eva.loop = true;
+		assets.eva.play();
+
+		assets.flecha = createVideo("flecha.mp4");
+		assets.flecha.muted = true;
+		assets.flecha.loop = true;
+		assets.flecha.play();
+
+		assets.chispa = createVideo("chispa.webm");
+		assets.chispa.muted = true;
+		assets.chispa.loop = true;
+		assets.chispa.play();
   }
 
   window.draw = () => {
+		cursor("move");
 		const mod255 = frameCount % 255;
     background(mod255, 100, 400 - mod255, 10);
+
+		// resplandor circular
+		if (flagIntro) {
+			for (let i = 10; i > 0; i--) {
+				circle(halfWidth, halfHeight, i * mod255);
+			}
+			return;
+		}
+
+		const { qrImg, shrek, eva, piolin } = assets;
+
+		// particulas
+		push();
+		fill(255, 100);
+		shadow(255, 100);
+		shadowBox(0, 0, 10);
+		for (let i = 0; i < 130; i++) {
+			const ns = noise(i * width, frameCount * 0.001 + i * 100, mouseX * 0.001);
+			const cx = (ns * width * 2) % width;
+			const cy = (i * mod255 * 0.1) % height;
+			circle(cx, cy, 5);
+		}
+		pop();
+
+		// resplandor rectangular
+		push();
+		shadow(200, 255, 210);
+		shadowBox(0, 0, mod255);
+		stroke(255);
+    rect(halfWidth - 151, halfHeight - 151, 302, 302);
+		pop();
     if (qrImg) image(qrImg, halfWidth - 150, halfHeight - 150, 300, 300);
+
+		// aviso listo
+		push();
+		fill(140, 170, 150);
+		stroke(30, 255, 100);
+		shadow(30, 255, 100, 30);
+		shadowBox(0, 0, 6);
+		rect(mouseX, mouseY, 120, 100);
 		if (shrek) image(shrek, mouseX, mouseY, 120, 100);
+		fill(30, 255, 100);
+		shadow(255);
+		shadowBox(0, 0, 5);
+		textSize(30);
+		text("Listo!!!", mouseX + 64, mouseY + 86);
+		pop();
+
+		// boton volver
+		const ex = width * 0.01;
+		const ey = height * 0.04;
+		push();
+		noStroke();
+		fill(60, 80, 200);
+		rect(ex, ey, 100, 100);
+		if (eva) image(eva, ex, ey, 100, 100);
+		const eCol = inFill(mouseX, mouseY);
+		stroke(255);
+		shadow(255);
+		shadowBox(0, 0, eCol ? 6 : 1);
+		textSize(30);
+		textFont("serif")
+		text("Volver", ex + 50, ey + 80);
+		push();
+		noFill();
+		rect(ex, ey, 100, 100);
+		pop();
+		if (eCol) {
+			textSize(36);
+			textFont("sans-serif")
+			rect(mouseX, mouseY, 120, 100);
+			text("otro\nqr??", mouseX + 54, mouseY + 40);
+			cursor(HAND);
+		}
+		pop();
+
+		// boton descargar
+		const px = width * 0.96 - piolin.width;
+		const py = height * 0.96 - piolin.height;
+		push();
+		fill(200, 180, 240);
+		rect(px, py, 100, 120);
+		if (piolin) image(piolin, px, py, 100, 120);
+		noFill();
+		stroke(255);
+		shadowBox(0, 0, 2);
+		shadow(255);
+		rect(px, py, 100, 120);
+		const pCol = inFill(mouseX, mouseY);
+		pCol ? shadow(225, 60, 80) : noShadow();
+		fill(225, 60, 80);
+		stroke(225, 60, 80);
+		text("DESCARGAR", px + 50, py + 20);
+		if (pCol) {
+			push();
+			fill(225);
+			stroke(225);
+			textSize(28);
+			textFont("sans-serif");
+			cursor(HAND);
+			text("qr.png", px + 50, py + 110);
+			if (assets.flecha) image(assets.flecha, px + 22, py + 36, 50, 50);
+			if (assets.chispa) image(assets.chispa, mouseX - 50, mouseY - 70, 100, 120);
+			pop();
+		}
+		pop();
+
+		if (
+			mouseX > width * 0.96 - piolin.width &&
+			mouseX < width * 0.96 - piolin.width + 100 &&
+			mouseY > height * 0.96 - piolin.height &&
+			mouseY < height * 0.96 - piolin.height + 120
+		) console.log(111);
   }
+
+	let flagV = false;
+	let flagD = false;
+	window.mousePressed = () => {
+		if (flagIntro) return;
+		const { piolin = {} } = assets;
+
+		if (
+			mouseX > width * 0.01 &&
+			mouseX < width * 0.01 + 100 &&
+			mouseY > height * 0.04 &&
+			mouseY < height * 0.04 + 100
+		) flagV = true;
+		
+		else if (
+			mouseX > width * 0.96 - piolin.width &&
+			mouseX < width * 0.96 - piolin.width + 100 &&
+			mouseY > height * 0.96 - piolin.height &&
+			mouseY < height * 0.96 - piolin.height + 120
+		) flagD = true;
+	}
+
+	window.mouseReleased = () => {
+		if (flagIntro) {
+			flagV = false;
+			flagD = false;
+			return;
+		}
+
+		const { piolin = {} } = assets;
+
+		if (
+			flagV &&
+			mouseX > width * 0.01 &&
+			mouseX < width * 0.01 + 100 &&
+			mouseY > height * 0.04 &&
+			mouseY < height * 0.04 + 100
+		) {
+			flagV = false;
+			flagD = false;
+			flagIntro = true;
+			document.querySelector("#inputText").value = "";
+			document.querySelector("#contenedorInput").style.display = "flex";
+		}
+		
+		else if (
+			flagD &&
+			mouseX > width * 0.96 - piolin.width &&
+			mouseX < width * 0.96 - piolin.width + 100 &&
+			mouseY > height * 0.96 - piolin.height &&
+			mouseY < height * 0.96 - piolin.height + 120
+		) {
+			console.log(1234567899)
+		}
+	}
 
 	function handleResize() {
 		requestAnimationFrame(() => {
@@ -229,6 +426,7 @@
 			isVert
 				? resizeCanvas(RESOLU, maxSize)
 				: resizeCanvas(maxSize, RESOLU);
+			background(255);
 		});
 	}
 
