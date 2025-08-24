@@ -206,8 +206,18 @@
   const assets = {};
 	let flagIntro = true;
 
+	const reiniciarVideo = video => {
+		if (!video) return;
+		video.currentTime = 0;
+		video.play();
+	}
+
 	document.querySelector("#inputBtn").addEventListener("click", () => {
 		if (flagIntro) flagIntro = false;
+		reiniciarVideo(assets.shrek);
+		reiniciarVideo(assets.eva);
+		reiniciarVideo(assets.flecha);
+		reiniciarVideo(assets.chispa);
 		
 		// actualiza ajuste
 		config.data = document.querySelector("#inputText").value || "lorem ipsum";
@@ -262,31 +272,35 @@
 		assets.shrek = createVideo("shrek.mp4");
 		assets.shrek.muted = true;
 		assets.shrek.loop = true;
-		assets.shrek.play();
+		assets.shrek.pause();
 
 		assets.eva = createVideo("evangelion.mp4");
 		assets.eva.muted = true;
 		assets.eva.loop = true;
-		assets.eva.play();
+		assets.eva.pause();
 
 		assets.flecha = createVideo("flecha.mp4");
 		assets.flecha.muted = true;
 		assets.flecha.loop = true;
-		assets.flecha.play();
+		assets.flecha.pause();
 
 		assets.chispa = createVideo("chispa.webm");
 		assets.chispa.muted = true;
 		assets.chispa.loop = true;
-		assets.chispa.play();
+		assets.chispa.pause();
   }
 
   window.draw = () => {
 		cursor("move");
 		const mod255 = frameCount % 255;
-    background(mod255, 100, 400 - mod255, 10);
-
-		// portada
+		
+		// PORTADA
 		if (flagIntro) {
+			const modToque = mouseIsPressed
+				? (toque.iniT + dist(toque.iniX, toque.iniY, mouseX, mouseY)) % 255
+				: mod255;
+
+			background(modToque, 100, 400 - modToque, 10);
 
 			// estrellas
 			pushMatrix();
@@ -301,21 +315,20 @@
 			image(assets.wordart, halfWidth - 200, height - max(height * 0.7, 370));
 
 			// resplandor circular
-			if (mouseIsPressed) {
-				toque.mod = (toque.iniT + dist(toque.iniX, toque.iniY, mouseX, mouseY)) % 255;
-			}
 			push();
 			fill(200, 1);
 			shadow(200, 20);
 			shadowBox(0, 0, 15);
 			for (let i = 6; i > 0; i--) {
-				circle(halfWidth, halfHeight, i * (mouseIsPressed ? toque.mod : mod255));
+				circle(halfWidth, halfHeight, i * modToque);
 			}
 			pop();
 			return;
 		}
 
+		// NO PORTADA
 		textAlign(CENTER);
+		background(mod255, 100, 400 - mod255, 10);
 		const { qrImg, shrek, eva, piolin } = assets;
 
 		// particulas
@@ -395,8 +408,8 @@
 		pop();
 
 		// boton descargar
-		const px = width * 0.96 - piolin?.width ?? 100;
-		const py = height * 0.96 - piolin?.height ?? 120;
+		const px = width * 0.96 - (piolin?.width ?? 100);
+		const py = height * 0.96 - (piolin?.height ?? 120);
 		push();
 		fill(200, 180, 240);
 		rect(px, py, 100, 120);
