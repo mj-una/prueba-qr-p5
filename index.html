@@ -346,11 +346,16 @@
 
 		// resplandor rectangular
 		push();
+		fill(255);
+		noShadow();
+		noStroke();
+    rect(halfWidth - 151, halfHeight - 151, 302, 302);
 		fill(200, 1);
 		shadow(200, 255, 210);
 		shadowBox(0, 0, mod255);
 		stroke(255);
     rect(halfWidth - 151, halfHeight - 151, 302, 302);
+		fill(200, 1);
 		shadowBox(0, 0, (frameCount + 127) % 255);
     rect(halfWidth - 151, halfHeight - 151, 302, 302);
 		pop();
